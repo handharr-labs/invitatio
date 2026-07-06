@@ -12,6 +12,7 @@ import {
   useToast,
 } from "@handharr-labs/forge-ui-base-gold";
 import { setGuestbookHiddenAction } from "./actions";
+import { GuestsPanel, type GuestVM } from "./GuestsPanel";
 
 export type RsvpVM = {
   id: string;
@@ -44,14 +45,18 @@ function fmtDate(iso: string): string {
 
 export function SiteDetailTabs({
   siteId,
+  slug,
   canModerate,
   rsvps,
   guestbook,
+  guests,
 }: {
   siteId: string;
+  slug: string;
   canModerate: boolean;
   rsvps: RsvpVM[];
   guestbook: GuestbookVM[];
+  guests: GuestVM[];
 }) {
   const attendingCount = rsvps.filter((r) => r.attending).length;
   const headCount = rsvps
@@ -63,6 +68,7 @@ export function SiteDetailTabs({
       <TabsList>
         <TabsTab value="rsvp">RSVP ({rsvps.length})</TabsTab>
         <TabsTab value="guestbook">Guestbook ({guestbook.length})</TabsTab>
+        <TabsTab value="guests">Guests ({guests.length})</TabsTab>
       </TabsList>
 
       <TabsPanel value="rsvp">
@@ -123,6 +129,15 @@ export function SiteDetailTabs({
           siteId={siteId}
           canModerate={canModerate}
           entries={guestbook}
+        />
+      </TabsPanel>
+
+      <TabsPanel value="guests">
+        <GuestsPanel
+          siteId={siteId}
+          slug={slug}
+          canManage={canModerate}
+          guests={guests}
         />
       </TabsPanel>
     </Tabs>

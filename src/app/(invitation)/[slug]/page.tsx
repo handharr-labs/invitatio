@@ -4,13 +4,44 @@ import type { GuestMessage, InvitationConfig } from "@handharr-labs/forge-ui-dos
 import { dbBacked, getPublishedSiteBySlugUseCase } from "@/features/sites/site.di";
 import { listGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
 import { listWishlistClaimsUseCase } from "@/features/wishlist/wishlist.di";
+import { getGuestByTokenUseCase } from "@/features/guests/guest.di";
 import { GuestInvitation } from "./GuestInvitation";
 
 type Params = { slug: string };
+type Search = { to?: string | string[] };
 
 async function loadSite(slug: string) {
   const result = await getPublishedSiteBySlugUseCase().execute({ slug });
   return result.ok ? result.value : null;
+}
+
+/**
+ * Resolve a `?to=<token>` personalized link to the invited guest's name, if the
+ * token belongs to this site. Returns null for absent/foreign tokens.
+ */
+async function resolveGuestName(
+  siteId: string,
+  to: string | string[] | undefined,
+): Promise<string | null> {
+  const token = Array.isArray(to) ? to[0] : to;
+  if (!token) return null;
+  const result = await getGuestByTokenUseCase().execute(token);
+  if (!result.ok || !result.value) return null;
+  return result.value.siteId === siteId ? result.value.name : null;
+}
+
+/** Stamp the invited guest's name into the cover greeting + RSVP name prefill. */
+function personalize(
+  config: InvitationConfig,
+  guestName: string,
+): InvitationConfig {
+  const next = structuredClone(config) as InvitationConfig;
+  for (const section of next.sections) {
+    const props = section.props as Record<string, unknown>;
+    if (section.type === "cover") props.guestName = guestName;
+    if (section.type === "rsvp") props.defaultName = guestName;
+  }
+  return next;
 }
 
 export async function generateMetadata({
@@ -37,18 +68,25 @@ export async function generateMetadata({
 // on in Phase 2.
 export default async function InvitationPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<Search>;
 }) {
-  const { slug } = await params;
+  const [{ slug }, { to }] = await Promise.all([params, searchParams]);
   const site = await loadSite(slug);
   if (!site) notFound();
 
-  // Load the persisted guest-write data to hydrate the feed sections.
-  const [guestbookResult, claimsResult] = await Promise.all([
+  // Load the persisted guest-write data + resolve the personalized link (if any).
+  const [guestbookResult, claimsResult, guestName] = await Promise.all([
     listGuestbookEntriesUseCase().execute(site.id),
     listWishlistClaimsUseCase().execute(site.id),
+    resolveGuestName(site.id, to),
   ]);
+
+  const config = guestName
+    ? personalize(site.customization as InvitationConfig, guestName)
+    : (site.customization as InvitationConfig);
 
   const guestbookMessages: GuestMessage[] = (
     guestbookResult.ok ? guestbookResult.value : []
@@ -65,7 +103,7 @@ export default async function InvitationPage({
 
   return (
     <GuestInvitation
-      config={site.customization as InvitationConfig}
+      config={config}
       siteId={site.id}
       guestbookMessages={guestbookMessages}
       wishlistClaims={wishlistClaims}

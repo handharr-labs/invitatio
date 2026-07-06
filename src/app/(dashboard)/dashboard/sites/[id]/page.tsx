@@ -4,11 +4,13 @@ import { PageHeader, Badge, Button } from "@handharr-labs/forge-ui-base-gold";
 import { getSiteByIdUseCase, dbBacked } from "@/features/sites/site.di";
 import { listRsvpUseCase } from "@/features/rsvp/rsvp.di";
 import { listAllGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
+import { listGuestsUseCase } from "@/features/guests/guest.di";
 import {
   SiteDetailTabs,
   type GuestbookVM,
   type RsvpVM,
 } from "./SiteDetailTabs";
+import type { GuestVM } from "./GuestsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +25,10 @@ export default async function SiteDetailPage({
   if (!siteResult.ok) notFound();
   const site = siteResult.value;
 
-  const [rsvpResult, guestbookResult] = await Promise.all([
+  const [rsvpResult, guestbookResult, guestsResult] = await Promise.all([
     listRsvpUseCase().execute(site.id),
     listAllGuestbookEntriesUseCase().execute(site.id),
+    listGuestsUseCase().execute(site.id),
   ]);
 
   const rsvps: RsvpVM[] = (rsvpResult.ok ? rsvpResult.value : []).map((r) => ({
@@ -47,6 +50,15 @@ export default async function SiteDetailPage({
     isHidden: e.isHidden,
     createdAt: e.createdAt,
   }));
+
+  const guests: GuestVM[] = (guestsResult.ok ? guestsResult.value : []).map(
+    (g) => ({
+      id: g.id,
+      name: g.name,
+      invitedCount: g.invitedCount,
+      token: g.token,
+    }),
+  );
 
   const published = site.publishedAt != null;
 
@@ -81,9 +93,11 @@ export default async function SiteDetailPage({
 
       <SiteDetailTabs
         siteId={site.id}
+        slug={site.slug}
         canModerate={dbBacked()}
         rsvps={rsvps}
         guestbook={guestbook}
+        guests={guests}
       />
     </div>
   );

@@ -83,6 +83,7 @@ src/
       sites/new/                # create a site from a preset
       sites/[id]/               # site detail — RSVP table + guestbook moderation tabs
       sites/[id]/edit/          # config editor — live PreviewFrame + theme/section controls
+                                # (site detail also has a Guests tab: CSV import + links)
     login/                      # public Google sign-in
     api/auth/[...nextauth]/     # forge-auth route handler
   features/
@@ -115,6 +116,11 @@ the forge-ui-dos `InvitationConfig`, so rendering is essentially
   **config editor**: create-from-preset (`/dashboard/sites/new`) plus a live
   editor (`…/edit`) — `PreviewFrame` of `<Invitation config>` beside
   palette/typeface/layout/night controls, chrome toggles, `SortableList`
-  section reorder + enable, and a per-section JSON content drawer. Still open
-  in Phase 3: guest-list + personalized links (and richer per-section forms).
+  section reorder + enable, and a per-section JSON content drawer. Plus
+  **guest lists**: CSV import (upload or paste; lenient parser with
+  quoted-field + header detection), a guests table with per-guest
+  **personalized links** (`/{slug}?to={token}`) + copy/export, and link
+  resolution on the guest route (stamps the greeting into the cover + RSVP
+  name). **Phase 3 complete.** Richer per-section content forms remain a
+  nice-to-have follow-up.
 - **Phase 4:** gamification wiring · **5:** subdomains · **6:** couple self-serve + payments.
