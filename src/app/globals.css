@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* App source (this file lives in src/app). */
+@source "../";
+
+/* Forge Kit DS packages ship raw TSX with Tailwind utility classes. Tailwind v4
+   skips node_modules during auto-detection, so point it at the DS sources
+   explicitly or their classes won't be generated. */
+@source "../../node_modules/@handharr-labs/forge-ui-dos/src";
+@source "../../node_modules/@handharr-labs/forge-ui-base-gold/src";
