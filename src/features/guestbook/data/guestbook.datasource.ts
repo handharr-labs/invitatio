@@ -5,6 +5,10 @@ import { guestbookRowSchema, type GuestbookRow } from "./guestbook.dto";
 export interface GuestbookDataSource {
   insert(input: NewGuestbookEntry): Promise<void>;
   fetchVisibleBySite(siteId: string): Promise<GuestbookRow[]>;
+  /** Admin: all entries incl. hidden, newest first. */
+  fetchAllBySite(siteId: string): Promise<GuestbookRow[]>;
+  /** Admin: hide/unhide an entry (moderation). */
+  setHidden(id: string, hidden: boolean): Promise<void>;
 }
 
 const COLUMNS = "id, site_id, name, message, attending, is_hidden, created_at";
@@ -33,6 +37,24 @@ export class SupabaseGuestbookDataSource implements GuestbookDataSource {
     if (error) throw new Error(`[guestbook] list failed: ${error.message}`);
     return (data ?? []).map((row) => guestbookRowSchema.parse(row));
   }
+
+  async fetchAllBySite(siteId: string): Promise<GuestbookRow[]> {
+    const { data, error } = await this.db
+      .from("guestbook_entries")
+      .select(COLUMNS)
+      .eq("site_id", siteId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(`[guestbook] admin list failed: ${error.message}`);
+    return (data ?? []).map((row) => guestbookRowSchema.parse(row));
+  }
+
+  async setHidden(id: string, hidden: boolean): Promise<void> {
+    const { error } = await this.db
+      .from("guestbook_entries")
+      .update({ is_hidden: hidden })
+      .eq("id", id);
+    if (error) throw new Error(`[guestbook] moderate failed: ${error.message}`);
+  }
 }
 
 /** No-DB fallback: accepts writes without persisting; reads return empty. */
@@ -44,5 +66,11 @@ export class NullGuestbookDataSource implements GuestbookDataSource {
   }
   async fetchVisibleBySite(): Promise<GuestbookRow[]> {
     return [];
+  }
+  async fetchAllBySite(): Promise<GuestbookRow[]> {
+    return [];
+  }
+  async setHidden(): Promise<void> {
+    console.warn("[guestbook] Supabase not configured — moderation is a no-op.");
   }
 }

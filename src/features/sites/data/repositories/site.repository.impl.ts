@@ -28,6 +28,16 @@ export class SiteRepositoryImpl implements SiteRepository {
     }
   }
 
+  async getById(id: string): Promise<Result<Site, DomainError>> {
+    try {
+      const row = await this.dataSource.fetchById(id);
+      if (!row) return err(new NotFoundError(`Site "${id}"`));
+      return ok(toSite(row));
+    } catch (cause) {
+      return err(new UnexpectedError(cause));
+    }
+  }
+
   async listAll(): Promise<Result<Site[], DomainError>> {
     try {
       const rows = await this.dataSource.fetchAll();

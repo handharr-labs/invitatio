@@ -21,6 +21,18 @@ export class SupabaseSiteDataSource implements SiteRemoteDataSource {
     return siteRowSchema.parse(data);
   }
 
+  async fetchById(id: string): Promise<SiteRow | null> {
+    const { data, error } = await this.db
+      .from("sites")
+      .select(COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw new Error(`[sites] supabase read failed: ${error.message}`);
+    if (!data) return null;
+    return siteRowSchema.parse(data);
+  }
+
   async fetchAll(): Promise<SiteRow[]> {
     const { data, error } = await this.db
       .from("sites")

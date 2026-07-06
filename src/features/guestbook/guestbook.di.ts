@@ -3,6 +3,10 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 import type { GuestbookRepository } from "./domain/interfaces/guestbook.repository";
 import { SubmitGuestbookEntry } from "./domain/use-cases/submit-guestbook-entry.use-case";
 import { ListGuestbookEntries } from "./domain/use-cases/list-guestbook-entries.use-case";
+import {
+  ListAllGuestbookEntries,
+  SetGuestbookEntryHidden,
+} from "./domain/use-cases/moderate-guestbook.use-case";
 import { GuestbookRepositoryImpl } from "./data/guestbook.repository.impl";
 import {
   NullGuestbookDataSource,
@@ -23,4 +27,12 @@ export function submitGuestbookEntryUseCase(): SubmitGuestbookEntry {
 
 export function listGuestbookEntriesUseCase(): ListGuestbookEntries {
   return new ListGuestbookEntries(getRepository());
+}
+
+export function listAllGuestbookEntriesUseCase(): ListAllGuestbookEntries {
+  return new ListAllGuestbookEntries(getRepository());
+}
+
+export function setGuestbookEntryHiddenUseCase(): SetGuestbookEntryHidden {
+  return new SetGuestbookEntryHidden(getRepository());
 }

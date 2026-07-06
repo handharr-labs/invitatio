@@ -78,8 +78,9 @@ Clean Architecture per the kit's web-architecture convention. One feature so far
 ```
 src/
   app/                          # Application layer — routes, layouts, actions, DI
-    (invitation)/[slug]/        # public guest invitation → <Invitation config />
-    (dashboard)/dashboard/      # admin-only: site list + publish/unpublish
+    (invitation)/[slug]/        # public guest invitation → <Invitation config /> + write actions
+    (dashboard)/dashboard/      # admin-only (gold DS): sites list + StatCards
+      sites/[id]/               # site detail — RSVP table + guestbook moderation tabs
     login/                      # public Google sign-in
     api/auth/[...nextauth]/     # forge-auth route handler
   features/
@@ -104,6 +105,11 @@ the forge-ui-dos `InvitationConfig`, so rendering is essentially
   wishlist claims persisted through the DS `on*` handlers → server actions →
   Supabase (`rsvp`, `guestbook`, `wishlist` features; migration `0002`). Writes
   degrade gracefully to optimistic-only when Supabase isn't connected.
-- **Phase 3:** full admin dashboard on `@handharr-labs/forge-ui-base-gold`
-  (config editor, guest lists, RSVP moderation).
+- **Phase 3 (partial) — done here:** admin dashboard on
+  `@handharr-labs/forge-ui-base-gold` — `DashboardShell` + `Sidebar` chrome
+  (scoped under `.tier-gold`), sites list (StatCards + `DataTable`, inline
+  publish/unpublish), and per-site detail (`/dashboard/sites/[id]`) with tabbed
+  **RSVP responses** table and **guestbook moderation** (hide/unhide). Still
+  open in Phase 3: the site config editor (presets, palette/typeface pickers,
+  section reorder, live preview) and guest-list + personalized links.
 - **Phase 4:** gamification wiring · **5:** subdomains · **6:** couple self-serve + payments.

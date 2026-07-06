@@ -16,6 +16,10 @@ export class InMemorySiteDataSource implements SiteRemoteDataSource {
     );
   }
 
+  async fetchById(id: string): Promise<SiteRow | null> {
+    return this.rows.find((r) => r.id === id) ?? null;
+  }
+
   async fetchAll(): Promise<SiteRow[]> {
     return [...this.rows];
   }

@@ -11,4 +11,8 @@ export interface GuestbookRepository {
   listVisibleBySite(
     siteId: string,
   ): Promise<Result<GuestbookEntry[], DomainError>>;
+  /** Admin: all entries incl. hidden, newest first. */
+  listAllBySite(siteId: string): Promise<Result<GuestbookEntry[], DomainError>>;
+  /** Admin: hide/unhide an entry. */
+  setHidden(id: string, hidden: boolean): Promise<Result<void, DomainError>>;
 }
