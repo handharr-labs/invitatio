@@ -80,7 +80,9 @@ src/
   app/                          # Application layer — routes, layouts, actions, DI
     (invitation)/[slug]/        # public guest invitation → <Invitation config /> + write actions
     (dashboard)/dashboard/      # admin-only (gold DS): sites list + StatCards
+      sites/new/                # create a site from a preset
       sites/[id]/               # site detail — RSVP table + guestbook moderation tabs
+      sites/[id]/edit/          # config editor — live PreviewFrame + theme/section controls
     login/                      # public Google sign-in
     api/auth/[...nextauth]/     # forge-auth route handler
   features/
@@ -108,8 +110,11 @@ the forge-ui-dos `InvitationConfig`, so rendering is essentially
 - **Phase 3 (partial) — done here:** admin dashboard on
   `@handharr-labs/forge-ui-base-gold` — `DashboardShell` + `Sidebar` chrome
   (scoped under `.tier-gold`), sites list (StatCards + `DataTable`, inline
-  publish/unpublish), and per-site detail (`/dashboard/sites/[id]`) with tabbed
-  **RSVP responses** table and **guestbook moderation** (hide/unhide). Still
-  open in Phase 3: the site config editor (presets, palette/typeface pickers,
-  section reorder, live preview) and guest-list + personalized links.
+  publish/unpublish), per-site detail (`/dashboard/sites/[id]`) with tabbed
+  **RSVP responses** table + **guestbook moderation** (hide/unhide), and the
+  **config editor**: create-from-preset (`/dashboard/sites/new`) plus a live
+  editor (`…/edit`) — `PreviewFrame` of `<Invitation config>` beside
+  palette/typeface/layout/night controls, chrome toggles, `SortableList`
+  section reorder + enable, and a per-section JSON content drawer. Still open
+  in Phase 3: guest-list + personalized links (and richer per-section forms).
 - **Phase 4:** gamification wiring · **5:** subdomains · **6:** couple self-serve + payments.

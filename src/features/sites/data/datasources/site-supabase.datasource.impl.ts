@@ -1,8 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { siteRowSchema, type SiteRow } from "../dtos/site.dto";
-import type { SiteRemoteDataSource } from "./site-remote.datasource";
+import {
+  SiteSlugConflictError,
+  type NewSiteRow,
+  type SiteContentPatch,
+  type SiteRemoteDataSource,
+} from "./site-remote.datasource";
 
 const COLUMNS = "id, slug, couple_names, customization, published_at, created_at, updated_at";
+const UNIQUE_VIOLATION = "23505";
 
 /** Reads site rows from Supabase Postgres. */
 export class SupabaseSiteDataSource implements SiteRemoteDataSource {
@@ -41,6 +47,42 @@ export class SupabaseSiteDataSource implements SiteRemoteDataSource {
 
     if (error) throw new Error(`[sites] supabase list failed: ${error.message}`);
     return (data ?? []).map((row) => siteRowSchema.parse(row));
+  }
+
+  async insert(input: NewSiteRow): Promise<string> {
+    const { data, error } = await this.db
+      .from("sites")
+      .insert({
+        slug: input.slug,
+        couple_names: input.couple_names,
+        customization: input.customization,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      if (error.code === UNIQUE_VIOLATION)
+        throw new SiteSlugConflictError(input.slug);
+      throw new Error(`[sites] supabase insert failed: ${error.message}`);
+    }
+    return (data as { id: string }).id;
+  }
+
+  async updateContent(id: string, patch: SiteContentPatch): Promise<void> {
+    const { error } = await this.db
+      .from("sites")
+      .update({
+        slug: patch.slug,
+        couple_names: patch.couple_names,
+        customization: patch.customization,
+      })
+      .eq("id", id);
+
+    if (error) {
+      if (error.code === UNIQUE_VIOLATION)
+        throw new SiteSlugConflictError(patch.slug);
+      throw new Error(`[sites] supabase update failed: ${error.message}`);
+    }
   }
 
   async updatePublishedAt(

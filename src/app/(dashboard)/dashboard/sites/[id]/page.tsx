@@ -72,6 +72,9 @@ export default async function SiteDetailPage({
                 View invitation
               </Button>
             </Link>
+            <Link href={`/dashboard/sites/${site.id}/edit`}>
+              <Button size="sm">Edit invitation</Button>
+            </Link>
           </div>
         }
       />

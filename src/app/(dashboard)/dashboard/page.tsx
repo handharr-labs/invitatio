@@ -1,4 +1,10 @@
-import { PageHeader, StatCard, Notice } from "@handharr-labs/forge-ui-base-gold";
+import Link from "next/link";
+import {
+  PageHeader,
+  StatCard,
+  Notice,
+  Button,
+} from "@handharr-labs/forge-ui-base-gold";
 import { listSitesUseCase, dbBacked } from "@/features/sites/site.di";
 import { SitesTable, type SiteRowVM } from "./SitesTable";
 
@@ -23,6 +29,11 @@ export default async function DashboardPage() {
       <PageHeader
         title="Sites"
         description="Every couple's invitation. Click a row to manage RSVPs and wishes."
+        action={
+          <Link href="/dashboard/sites/new">
+            <Button disabled={!usingDb}>New invitation</Button>
+          </Link>
+        }
       />
 
       {!usingDb && (

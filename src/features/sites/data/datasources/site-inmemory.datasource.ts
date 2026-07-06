@@ -24,10 +24,18 @@ export class InMemorySiteDataSource implements SiteRemoteDataSource {
     return [...this.rows];
   }
 
+  async insert(): Promise<string> {
+    throw new Error(READ_ONLY);
+  }
+
+  async updateContent(): Promise<void> {
+    throw new Error(READ_ONLY);
+  }
+
   async updatePublishedAt(): Promise<void> {
-    // The fallback is read-only — publishing requires a real database.
-    throw new Error(
-      "Publishing requires Supabase. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
-    );
+    throw new Error(READ_ONLY);
   }
 }
+
+const READ_ONLY =
+  "This action requires Supabase. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.";

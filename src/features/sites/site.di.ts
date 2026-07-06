@@ -5,6 +5,8 @@ import { GetPublishedSiteBySlug } from "./domain/use-cases/get-published-site-by
 import { GetSiteById } from "./domain/use-cases/get-site-by-id.use-case";
 import { ListSites } from "./domain/use-cases/list-sites.use-case";
 import { SetSitePublished } from "./domain/use-cases/set-site-published.use-case";
+import { CreateSite } from "./domain/use-cases/create-site.use-case";
+import { UpdateSiteContent } from "./domain/use-cases/update-site-content.use-case";
 import { SiteRepositoryImpl } from "./data/repositories/site.repository.impl";
 import { SupabaseSiteDataSource } from "./data/datasources/site-supabase.datasource.impl";
 import { InMemorySiteDataSource } from "./data/datasources/site-inmemory.datasource";
@@ -58,4 +60,12 @@ export function listSitesUseCase(): ListSites {
 
 export function setSitePublishedUseCase(): SetSitePublished {
   return new SetSitePublished(getSiteRepository());
+}
+
+export function createSiteUseCase(): CreateSite {
+  return new CreateSite(getSiteRepository());
+}
+
+export function updateSiteContentUseCase(): UpdateSiteContent {
+  return new UpdateSiteContent(getSiteRepository());
 }
