@@ -82,11 +82,12 @@ src/
     (dashboard)/dashboard/      # admin-only: site list + publish/unpublish
     login/                      # public Google sign-in
     api/auth/[...nextauth]/     # forge-auth route handler
-  features/sites/
-    domain/                     # Site model, repository interface, use-cases (forge-core only)
-    data/                       # DTO (zod) · mapper · datasources (Supabase + in-memory) · repository
-    seed/                       # sample-config builder (DS-derived fallback)
-    site.di.ts                  # feature composition root (picks datasource by env)
+  features/
+    sites/                      # read path — Site model, repo, use-cases, seed fallback, site.di.ts
+    rsvp/                       # guest write — submit RSVP (+ list for Phase 3)
+    guestbook/                  # guest write — submit + list-visible feed
+    wishlist/                   # guest write — claim item (+ list claims to merge)
+    # each: domain/ (forge-core only) · data/ (dto+mapper · datasource Supabase+Null · repo) · <f>.di.ts
   lib/                          # auth (server + client), supabase client
   middleware.ts                 # guards /dashboard
 supabase/migrations/, supabase/seed.sql
@@ -98,8 +99,11 @@ the forge-ui-dos `InvitationConfig`, so rendering is essentially
 
 ## Roadmap (from the initiative)
 
-- **Phase 0/1 — done here:** scaffold, config-driven read path, publish/unpublish.
-- **Phase 2:** guest writes (RSVP, guestbook, wishlist claim) via `on*` handlers.
+- **Phase 0/1/2 — done here:** scaffold, config-driven read path,
+  publish/unpublish, and the guest **write path** — RSVP, guestbook, and
+  wishlist claims persisted through the DS `on*` handlers → server actions →
+  Supabase (`rsvp`, `guestbook`, `wishlist` features; migration `0002`). Writes
+  degrade gracefully to optimistic-only when Supabase isn't connected.
 - **Phase 3:** full admin dashboard on `@handharr-labs/forge-ui-base-gold`
   (config editor, guest lists, RSVP moderation).
 - **Phase 4:** gamification wiring · **5:** subdomains · **6:** couple self-serve + payments.

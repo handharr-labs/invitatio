@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Invitation, type InvitationConfig } from "@handharr-labs/forge-ui-dos";
-import { getPublishedSiteBySlugUseCase } from "@/features/sites/site.di";
+import type { GuestMessage, InvitationConfig } from "@handharr-labs/forge-ui-dos";
+import { dbBacked, getPublishedSiteBySlugUseCase } from "@/features/sites/site.di";
+import { listGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
+import { listWishlistClaimsUseCase } from "@/features/wishlist/wishlist.di";
+import { GuestInvitation } from "./GuestInvitation";
 
 type Params = { slug: string };
 
@@ -41,5 +44,33 @@ export default async function InvitationPage({
   const site = await loadSite(slug);
   if (!site) notFound();
 
-  return <Invitation config={site.customization as InvitationConfig} />;
+  // Load the persisted guest-write data to hydrate the feed sections.
+  const [guestbookResult, claimsResult] = await Promise.all([
+    listGuestbookEntriesUseCase().execute(site.id),
+    listWishlistClaimsUseCase().execute(site.id),
+  ]);
+
+  const guestbookMessages: GuestMessage[] = (
+    guestbookResult.ok ? guestbookResult.value : []
+  ).map((e) => ({
+    name: e.name,
+    message: e.message,
+    createdAt: e.createdAt,
+    attending: e.attending ?? undefined,
+  }));
+
+  const wishlistClaims = (claimsResult.ok ? claimsResult.value : []).map(
+    (c) => ({ itemId: c.itemId, claimedBy: c.claimedBy }),
+  );
+
+  return (
+    <GuestInvitation
+      config={site.customization as InvitationConfig}
+      siteId={site.id}
+      guestbookMessages={guestbookMessages}
+      wishlistClaims={wishlistClaims}
+      dbBacked={dbBacked()}
+    />
+  );
 }
+
