@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { auth, isAdminEmail } from "@/lib/auth";
+import { auth, authDisabled, isAdminEmail } from "@/lib/auth";
 import { setGuestbookEntryHiddenUseCase } from "@/features/guestbook/guestbook.di";
 import {
   deleteGuestUseCase,
@@ -14,6 +14,7 @@ export type ActionResult = { ok: boolean; message?: string };
 export type ImportResult = { ok: boolean; count?: number; message?: string };
 
 async function isAdmin(): Promise<boolean> {
+  if (authDisabled) return true;
   const session = await auth.requireSession().catch(() => null);
   return Boolean(session && isAdminEmail(session.user.email));
 }

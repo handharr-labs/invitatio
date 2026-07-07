@@ -2,9 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import type { Session } from "@handharr-labs/forge-core";
 import type { InvitationPreset } from "@handharr-labs/forge-ui-dos";
-import { auth, isAdminEmail } from "@/lib/auth";
+import { auth, authDisabled, isAdminEmail } from "@/lib/auth";
 import {
   createSiteUseCase,
   setSitePublishedUseCase,
@@ -16,10 +15,10 @@ export type ActionState = { ok: boolean; message?: string };
 export type CreateState = { ok: boolean; id?: string; message?: string };
 
 /** Shared admin gate for the dashboard's mutating actions. */
-async function requireAdmin(): Promise<Session | null> {
+async function requireAdmin(): Promise<boolean> {
+  if (authDisabled) return true;
   const session = await auth.requireSession().catch(() => null);
-  if (!session || !isAdminEmail(session.user.email)) return null;
-  return session;
+  return Boolean(session && isAdminEmail(session.user.email));
 }
 
 /** Publish/unpublish a site. Admin-only; re-checks the session server-side. */

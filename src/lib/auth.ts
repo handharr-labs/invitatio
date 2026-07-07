@@ -37,6 +37,16 @@ export const auth = defineAuth({
 });
 
 /**
+ * DEV-ONLY escape hatch. When `AUTH_DISABLED=true`, the dashboard skips the
+ * login guard entirely so the app can be explored before Google OAuth is set
+ * up. Off by default — never set this in production.
+ */
+export const authDisabled = process.env.AUTH_DISABLED === "true";
+
+/** Placeholder identity shown in the dashboard when auth is disabled. */
+export const DEV_ADMIN_EMAIL = "dev@localhost";
+
+/**
  * App-owned authorization: which signed-in Google accounts may use the admin
  * dashboard. Empty allowlist (dev) = any authenticated account is allowed.
  */
