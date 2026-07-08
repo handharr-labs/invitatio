@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@handharr-labs/forge-ui-base-gold";
 import type { InvitationConfig } from "@handharr-labs/forge-ui-dos";
 import { getSiteByIdUseCase, dbBacked } from "@/features/sites/site.di";
-import { SiteEditor } from "./SiteEditor";
+import { SiteEditorView } from "@/features/sites/presentation/views/SiteEditorView";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function EditSitePage({
         title={`Editing ${site.coupleNames}`}
         description="Tweak the theme, chrome, and sections — the preview updates live."
       />
-      <SiteEditor
+      <SiteEditorView
         siteId={site.id}
         initialSlug={site.slug}
         initialCoupleNames={site.coupleNames}

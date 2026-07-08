@@ -5,12 +5,10 @@ import { getSiteByIdUseCase, dbBacked } from "@/features/sites/site.di";
 import { listRsvpUseCase } from "@/features/rsvp/rsvp.di";
 import { listAllGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
 import { listGuestsUseCase } from "@/features/guests/guest.di";
-import {
-  SiteDetailTabs,
-  type GuestbookVM,
-  type RsvpVM,
-} from "./SiteDetailTabs";
-import type { GuestVM } from "./GuestsPanel";
+import { SiteDetailTabsView } from "@/features/sites/presentation/views/SiteDetailTabsView";
+import type { RsvpVM } from "@/features/rsvp/presentation/types/rsvp.vm";
+import type { GuestbookVM } from "@/features/guestbook/presentation/types/guestbook.vm";
+import type { GuestVM } from "@/features/guests/presentation/types/guest.vm";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +89,7 @@ export default async function SiteDetailPage({
         }
       />
 
-      <SiteDetailTabs
+      <SiteDetailTabsView
         siteId={site.id}
         slug={site.slug}
         canModerate={dbBacked()}

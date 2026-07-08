@@ -1,18 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { useRouter } from "next/navigation";
 import { DataTable, Badge, Button } from "@handharr-labs/forge-ui-base-gold";
-import { setPublishedAction } from "./actions";
+import { setPublishedAction } from "@/app/(dashboard)/dashboard/actions";
+import { useOptimisticToggleList } from "@/shared/hooks/use-optimistic-toggle-list";
+import type { SiteRowVM } from "../types/site.vm";
 
-export type SiteRowVM = {
-  id: string;
-  slug: string;
-  coupleNames: string;
-  published: boolean;
-};
-
-export function SitesTable({
+export function SitesTableView({
   rows,
   canPublish,
 }: {
@@ -20,23 +14,12 @@ export function SitesTable({
   canPublish: boolean;
 }) {
   const router = useRouter();
-  const [items, setItems] = React.useState(rows);
-  const [pendingId, setPendingId] = React.useState<string | null>(null);
-
-  React.useEffect(() => setItems(rows), [rows]);
-
-  async function togglePublish(row: SiteRowVM) {
-    setPendingId(row.id);
-    const res = await setPublishedAction(row.id, !row.published);
-    if (res.ok) {
-      setItems((prev) =>
-        prev.map((r) =>
-          r.id === row.id ? { ...r, published: !r.published } : r,
-        ),
-      );
-    }
-    setPendingId(null);
-  }
+  const { items, pendingId, run: togglePublish } = useOptimisticToggleList<SiteRowVM>({
+    source: rows,
+    itemId: (r) => r.id,
+    perform: (r) => setPublishedAction(r.id, !r.published),
+    applyOnSuccess: (r) => ({ ...r, published: !r.published }),
+  });
 
   return (
     <DataTable<SiteRowVM>

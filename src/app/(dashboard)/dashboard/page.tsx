@@ -6,7 +6,8 @@ import {
   Button,
 } from "@handharr-labs/forge-ui-base-gold";
 import { listSitesUseCase, dbBacked } from "@/features/sites/site.di";
-import { SitesTable, type SiteRowVM } from "./SitesTable";
+import { SitesTableView } from "@/features/sites/presentation/views/SitesTableView";
+import type { SiteRowVM } from "@/features/sites/presentation/types/site.vm";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function DashboardPage() {
         <StatCard label="Drafts" value={rows.length - publishedCount} />
       </div>
 
-      <SitesTable rows={rows} canPublish={usingDb} />
+      <SitesTableView rows={rows} canPublish={usingDb} />
     </div>
   );
 }

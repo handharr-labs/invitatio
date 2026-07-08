@@ -12,9 +12,8 @@ import {
   claimWishlistAction,
   submitGuestbookAction,
   submitRsvpAction,
-} from "./actions";
-
-export type WishlistClaimView = { itemId: string; claimedBy: string };
+} from "@/app/(invitation)/[slug]/actions";
+import type { WishlistClaimVM } from "@/features/wishlist/presentation/types/wishlist.vm";
 
 /**
  * Guest-facing renderer. Takes the data-only config plus the persisted feed
@@ -23,7 +22,7 @@ export type WishlistClaimView = { itemId: string; claimedBy: string };
  * optimistic and commit only after the handler resolves, so a thrown failure
  * cleanly reverts the optimistic UI.
  */
-export function GuestInvitation({
+export function GuestInvitationView({
   config,
   siteId,
   guestbookMessages,
@@ -33,7 +32,7 @@ export function GuestInvitation({
   config: InvitationConfig;
   siteId: string;
   guestbookMessages: GuestMessage[];
-  wishlistClaims: WishlistClaimView[];
+  wishlistClaims: WishlistClaimVM[];
   /**
    * When true, the DB guestbook feed is authoritative (replaces any config
    * sample messages). When false (no Supabase), the config's demo messages are

@@ -1,12 +1,7 @@
 import Link from "next/link";
 import "./_landing/landing.css";
-import {
-  Sprig,
-  Divider,
-  IconCheck,
-  IconArrow,
-  FeatureIcon,
-} from "./_landing/ornaments";
+import { Sprig, IconCheck, IconArrow, FeatureIcon } from "@/components/atoms";
+import { Divider } from "./_landing/Divider";
 
 const FEATURES = [
   {

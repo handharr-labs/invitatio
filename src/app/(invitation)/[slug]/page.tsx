@@ -5,7 +5,7 @@ import { dbBacked, getPublishedSiteBySlugUseCase } from "@/features/sites/site.d
 import { listGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
 import { listWishlistClaimsUseCase } from "@/features/wishlist/wishlist.di";
 import { getGuestByTokenUseCase } from "@/features/guests/guest.di";
-import { GuestInvitation } from "./GuestInvitation";
+import { GuestInvitationView } from "@/features/sites/presentation/views/GuestInvitationView";
 
 type Params = { slug: string };
 type Search = { to?: string | string[] };
@@ -102,7 +102,7 @@ export default async function InvitationPage({
   );
 
   return (
-    <GuestInvitation
+    <GuestInvitationView
       config={config}
       siteId={site.id}
       guestbookMessages={guestbookMessages}

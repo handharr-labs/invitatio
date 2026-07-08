@@ -10,7 +10,7 @@ import {
   Notice,
 } from "@handharr-labs/forge-ui-base-gold";
 import { slugify } from "@/features/sites/domain/services/slug.service";
-import { createSiteAction } from "../../actions";
+import { createSiteAction } from "@/app/(dashboard)/dashboard/actions";
 
 type Preset = "classic" | "playful" | "minimal";
 
@@ -20,7 +20,7 @@ const PRESET_OPTIONS: { value: Preset; label: string }[] = [
   { value: "minimal", label: "Minimal" },
 ];
 
-export function NewSiteForm({ canCreate }: { canCreate: boolean }) {
+export function NewSiteFormView({ canCreate }: { canCreate: boolean }) {
   const router = useRouter();
   const [coupleNames, setCoupleNames] = React.useState("");
   const [slug, setSlug] = React.useState("");
