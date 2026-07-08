@@ -5,6 +5,9 @@
   "description": "Admin-scaffolded, per-couple published wedding invitation sites. Data + admin + routing layer on top of the @handharr-labs Forge Kit.",
   "scripts": {
     "dev": "next dev",
+    "local-dev": "node scripts/link-kit.mjs && next dev --webpack",
+    "kit:link": "node scripts/link-kit.mjs",
+    "kit:unlink": "node scripts/link-kit.mjs --unlink",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
