@@ -7,7 +7,10 @@ import {
   TabsPanel,
   DataTable,
   Badge,
+  StatCard,
+  EmptyState,
 } from "@handharr-labs/forge-ui-base-gold";
+import { UserCheck, UserX, MailCheck, Inbox } from "lucide-react";
 import { formatShortDate } from "@/shared/utils/date";
 import { GuestbookModerationView } from "@/features/guestbook/presentation/views/GuestbookModerationView";
 import type { GuestbookVM } from "@/features/guestbook/presentation/types/guestbook.vm";
@@ -31,9 +34,13 @@ export function SiteDetailTabsView({
   guests: GuestVM[];
 }) {
   const attendingCount = rsvps.filter((r) => r.attending).length;
+  const declinedCount = rsvps.length - attendingCount;
   const headCount = rsvps
     .filter((r) => r.attending)
     .reduce((sum, r) => sum + r.guestCount, 0);
+  const responded = rsvps.length;
+  const invited = guests.length;
+  const responseRate = invited > 0 ? Math.round((responded / invited) * 100) : null;
 
   return (
     <Tabs defaultValue="rsvp">
@@ -44,13 +51,46 @@ export function SiteDetailTabsView({
       </TabsList>
 
       <TabsPanel value="rsvp">
-        <p className="mb-3 typo-body text-[var(--muted-foreground)]">
-          {attendingCount} attending · {headCount} total guests
-        </p>
+        <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard
+            label="Attending"
+            value={attendingCount}
+            icon={<UserCheck size={18} />}
+            description={
+              headCount === attendingCount
+                ? `${headCount} ${headCount === 1 ? "head" : "heads"} expected`
+                : `${headCount} ${headCount === 1 ? "head" : "heads"} expected (incl. plus-ones)`
+            }
+          />
+          <StatCard
+            label="Not attending"
+            value={declinedCount}
+            icon={<UserX size={18} />}
+            description={
+              declinedCount === 0 ? "No regrets yet" : "Won't be joining"
+            }
+          />
+          <StatCard
+            label={responseRate === null ? "Replies received" : "Response rate"}
+            value={responseRate === null ? responded : `${responseRate}%`}
+            icon={<MailCheck size={18} />}
+            description={
+              responseRate === null
+                ? "Import a guest list to track reply rate"
+                : `${responded} of ${invited} invitations replied`
+            }
+          />
+        </div>
         <DataTable<RsvpVM>
           data={rsvps}
           rowId={(r) => r.id}
-          emptyTitle="No RSVPs yet"
+          empty={
+            <EmptyState
+              icon={<Inbox size={22} />}
+              title="No replies yet"
+              description="Responses land here as guests RSVP. Share personalized links from the Guests tab to start collecting."
+            />
+          }
           columns={[
             {
               key: "name",

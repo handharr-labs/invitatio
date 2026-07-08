@@ -1,15 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   DataTable,
   Badge,
+  Button,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  EmptyState,
   useToast,
 } from "@handharr-labs/forge-ui-base-gold";
+import { Mailbox } from "lucide-react";
 import { setPublishedAction } from "@/app/(dashboard)/dashboard/actions";
 import { useOptimisticToggleList } from "@/shared/hooks/use-optimistic-toggle-list";
 import type { SiteRowVM } from "../types/site.vm";
@@ -44,7 +48,20 @@ export function SitesTableView({
       data={items}
       rowId={(r) => r.id}
       onRowClick={(r) => router.push(`/dashboard/sites/${r.id}`)}
-      emptyTitle="No sites yet"
+      empty={
+        <EmptyState
+          icon={<Mailbox size={22} />}
+          title="No invitations yet"
+          description="Create your first invitation from a template, then invite guests and collect RSVPs."
+          action={
+            canPublish ? (
+              <Link href="/dashboard/sites/new">
+                <Button>New invitation</Button>
+              </Link>
+            ) : undefined
+          }
+        />
+      }
       columns={[
         {
           key: "coupleNames",

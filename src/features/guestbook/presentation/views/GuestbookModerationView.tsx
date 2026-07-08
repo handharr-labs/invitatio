@@ -4,8 +4,10 @@ import {
   DataTable,
   Badge,
   Button,
+  EmptyState,
   useToast,
 } from "@handharr-labs/forge-ui-base-gold";
+import { MessageSquareHeart } from "lucide-react";
 import { setGuestbookHiddenAction } from "@/app/(dashboard)/dashboard/sites/[id]/actions";
 import { useOptimisticToggleList } from "@/shared/hooks/use-optimistic-toggle-list";
 import type { GuestbookVM } from "../types/guestbook.vm";
@@ -41,7 +43,13 @@ export function GuestbookModerationView({
     <DataTable<GuestbookVM>
       data={items}
       rowId={(e) => e.id}
-      emptyTitle="No wishes yet"
+      empty={
+        <EmptyState
+          icon={<MessageSquareHeart size={22} />}
+          title="No wishes yet"
+          description="Well-wishes guests leave on the invitation appear here, where you can hide any you'd rather not show."
+        />
+      }
       columns={[
         {
           key: "name",
