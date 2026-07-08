@@ -18,7 +18,7 @@
     "@handharr-labs/forge-auth": "^0.2.1",
     "@handharr-labs/forge-core": "^0.6.0",
     "@handharr-labs/forge-ui-base-gold": "^0.11.1",
-    "@handharr-labs/forge-ui-dos": "^0.4.0",
+    "@handharr-labs/forge-ui-dos": "^0.4.1",
     "@handharr-labs/forge-web-server": "^0.4.1",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.0",
