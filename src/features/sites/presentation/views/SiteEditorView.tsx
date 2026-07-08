@@ -96,15 +96,18 @@ export function SiteEditorView({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-      {/* Live preview */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      {/* Live preview. On mobile the columns stack, so the preview is capped at
+          ~60vh to let the controls peek below; on lg it becomes the tall sticky
+          pane. Height is driven by a responsive CSS var so PreviewFrame's single
+          inline `height` can still vary per breakpoint. */}
+      <div className="[--preview-h:60vh] lg:sticky lg:top-20 lg:self-start lg:[--preview-h:calc(100vh_-_12rem)]">
         <PreviewFrame
           title={
             <span className="typo-body font-medium">
               {coupleNames || "Preview"}
             </span>
           }
-          height="calc(100vh - 12rem)"
+          height="var(--preview-h)"
         >
           <Invitation config={config} />
         </PreviewFrame>
