@@ -16,7 +16,15 @@ function LoginCard() {
       </p>
       <button
         type="button"
-        onClick={() => authClient.signIn("google", { redirectTo })}
+        onClick={() =>
+          authClient.signIn("google", {
+            redirectTo,
+            // Always show Google's account chooser instead of silently
+            // re-authenticating the still-active Google session — lets a
+            // different admin pick their account after sign-out.
+            queryParams: { prompt: "select_account" },
+          })
+        }
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
