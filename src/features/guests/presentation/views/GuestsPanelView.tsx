@@ -6,7 +6,9 @@ import {
   Textarea,
   Notice,
   CopyButton,
+  EmptyState,
 } from "@handharr-labs/forge-ui-base-gold";
+import { Users } from "lucide-react";
 import { useGuestListPanel } from "../hooks/use-guest-list-panel";
 import type { GuestVM } from "../types/guest.vm";
 
@@ -101,7 +103,13 @@ export function GuestsPanelView({
       <DataTable<GuestVM>
         data={items}
         rowId={(g) => g.id}
-        emptyTitle="No guests yet — import a CSV above"
+        empty={
+          <EmptyState
+            icon={<Users size={22} />}
+            title="No guests yet"
+            description="Import a CSV above to add your guest list. Each guest gets a personalized link you can share individually."
+          />
+        }
         columns={[
           {
             key: "name",

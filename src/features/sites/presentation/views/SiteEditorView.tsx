@@ -236,6 +236,23 @@ export function SiteEditorView({
             </Button>
           }
         >
+          {sections.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-[var(--border)] px-4 py-8 text-center">
+              <p className="typo-body font-medium">No sections yet</p>
+              <p className="mt-1 typo-body text-[var(--muted-foreground)]">
+                Add a section to start building the invitation.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setAdding(true)}
+              >
+                Add section
+              </Button>
+            </div>
+          ) : (
+            <>
           <p className="mb-2 typo-body text-[var(--muted-foreground)]">
             Drag to reorder · toggle to show/hide · click a section to edit.
           </p>
@@ -299,6 +316,8 @@ export function SiteEditorView({
               />
             )}
           />
+            </>
+          )}
         </EditorGroup>
       </div>
 

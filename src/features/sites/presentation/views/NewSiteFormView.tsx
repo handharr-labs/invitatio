@@ -20,6 +20,14 @@ const PRESET_OPTIONS: { value: Preset; label: string }[] = [
   { value: "minimal", label: "Minimal" },
 ];
 
+// One honest line per template, sourced from the DOS preset definitions.
+// Every section is still editable afterwards.
+const PRESET_DESCRIPTIONS: Record<Preset, string> = {
+  classic: "A full, elegant flow with section navigation — no games.",
+  playful: "The classic flow plus a Team Poll to warm guests up.",
+  minimal: "Just the essentials: cover, couple, event, RSVP, closing.",
+};
+
 export function NewSiteFormView({ canCreate }: { canCreate: boolean }) {
   const router = useRouter();
   const [coupleNames, setCoupleNames] = React.useState("");
@@ -90,6 +98,9 @@ export function NewSiteFormView({ canCreate }: { canCreate: boolean }) {
           value={preset}
           onValueChange={(v) => setPreset(v as Preset)}
         />
+        <p className="mt-2 typo-body text-[var(--muted-foreground)]">
+          {PRESET_DESCRIPTIONS[preset]}
+        </p>
       </Field>
 
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
