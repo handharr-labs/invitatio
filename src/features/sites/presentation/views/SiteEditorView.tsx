@@ -5,10 +5,13 @@ import {
   Invitation,
   DOS_PALETTES,
   DOS_TYPESETS,
+  SECTION_CATALOG,
+  SECTION_CATEGORIES,
   type InvitationConfig,
   type InvitationTheme,
   type SectionConfig,
   type SectionType,
+  type SectionCategory,
 } from "@handharr-labs/forge-ui-dos";
 import {
   PreviewFrame,
@@ -23,6 +26,10 @@ import {
   Badge,
   Notice,
   Drawer,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@handharr-labs/forge-ui-base-gold";
 import {
   useSiteEditor,
@@ -38,34 +45,11 @@ const PALETTE_COLORS: Record<string, string> = {
   crimson: "#a01f36",
 };
 
-/** Friendly labels for section types. */
-const SECTION_LABELS: Partial<Record<SectionType, string>> = {
-  cover: "Cover",
-  welcome: "Welcome",
-  quote: "Quote / Verse",
-  couple: "Couple",
-  loveStory: "Love Story",
-  event: "Event Details",
-  countdown: "Countdown",
-  gallery: "Gallery",
-  rsvp: "RSVP",
-  guestbook: "Guestbook",
-  gift: "Gift",
-  wishlist: "Wishlist",
-  liveStream: "Live Stream",
-  closing: "Closing",
-  teamPoll: "Team Poll",
-  triviaQuiz: "Trivia Quiz",
-  songRequest: "Song Requests",
-  bingo: "Bingo",
-  scratchCard: "Scratch Card",
-  guessDetail: "Guess the Detail",
-  photoChallenge: "Photo Challenge",
-  bestDressed: "Best Dressed",
-  qrCheckIn: "QR Check-in",
-};
-
-const label = (t: SectionType) => SECTION_LABELS[t] ?? t;
+/** Labels + classification come from the DS catalog — single source of truth. */
+const label = (t: SectionType) => SECTION_CATALOG[t].label;
+const CATEGORY_LABEL: Record<SectionCategory, string> = Object.fromEntries(
+  SECTION_CATEGORIES.map((c) => [c.id, c.label]),
+) as Record<SectionCategory, string>;
 
 export function SiteEditorView({
   siteId,
@@ -98,9 +82,17 @@ export function SiteEditorView({
     config,
     dirty,
     patchSection,
+    addSection,
+    removeSection,
     save,
     editing,
   } = useSiteEditor({ siteId, initialSlug, initialCoupleNames, initialConfig });
+
+  const [adding, setAdding] = React.useState(false);
+  const presentTypes = React.useMemo(
+    () => new Set(sections.map((e) => e.section.type)),
+    [sections],
+  );
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -236,34 +228,68 @@ export function SiteEditorView({
           </Field>
         </EditorGroup>
 
-        <EditorGroup title="Sections">
+        <EditorGroup
+          title="Sections"
+          action={
+            <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
+              Add section
+            </Button>
+          }
+        >
           <p className="mb-2 typo-body text-[var(--muted-foreground)]">
-            Drag to reorder · toggle to show/hide · edit content per section.
+            Drag to reorder · toggle to show/hide · click a section to edit.
           </p>
           <SortableList<EditorSection>
             items={sections}
             itemId={(e) => e.key}
             onReorder={setSections}
-            renderItem={(e) => (
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className={
-                    e.section.enabled === false
-                      ? "opacity-50"
-                      : "font-medium"
-                  }
-                >
-                  {label(e.section.type)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingKey(e.key)}
-                >
-                  Edit
-                </Button>
-              </div>
-            )}
+            renderItem={(e) => {
+              const off = e.section.enabled === false;
+              const name = label(e.section.type);
+              return (
+                <div className="group flex min-w-0 items-center justify-between gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditingKey(e.key)}
+                    aria-label={`Edit ${name}`}
+                    className={`flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 pr-2 text-left transition-colors hover:bg-[var(--muted)] ${
+                      off ? "opacity-50" : ""
+                    }`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
+                        {CATEGORY_LABEL[SECTION_CATALOG[e.section.type].category]}
+                      </span>
+                      <span className={`block truncate ${off ? "" : "font-medium"}`}>
+                        {name}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden
+                      className="ml-auto shrink-0 text-xs text-[var(--muted-foreground)] opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      Edit
+                    </span>
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      aria-label={`More actions for ${name}`}
+                      className="shrink-0 rounded-md px-2 py-1 text-lg leading-none text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                    >
+                      ⋮
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem
+                        variant="danger"
+                        onClick={() => removeSection(e.key)}
+                      >
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            }}
             renderEnable={(e) => (
               <Switch
                 checked={e.section.enabled !== false}
@@ -288,20 +314,111 @@ export function SiteEditorView({
           onClose={() => setEditingKey(null)}
         />
       )}
+
+      {adding && (
+        <AddSectionDrawer
+          presentTypes={presentTypes}
+          onAdd={(type) => addSection(type)}
+          onClose={() => setAdding(false)}
+        />
+      )}
     </div>
+  );
+}
+
+/** Catalog picker — sections grouped by category; singletons already in the
+ *  invitation are shown as added. Stays open so several can be added at once. */
+function AddSectionDrawer({
+  presentTypes,
+  onAdd,
+  onClose,
+}: {
+  presentTypes: Set<SectionType>;
+  onAdd: (type: SectionType) => void;
+  onClose: () => void;
+}) {
+  const byCategory = React.useMemo(() => {
+    const types = Object.keys(SECTION_CATALOG) as SectionType[];
+    return SECTION_CATEGORIES.map((cat) => ({
+      ...cat,
+      types: types.filter((t) => SECTION_CATALOG[t].category === cat.id),
+    })).filter((g) => g.types.length > 0);
+  }, []);
+
+  return (
+    <Drawer
+      open
+      title="Add a section"
+      onClose={onClose}
+      footer={
+        <Button variant="ghost" onClick={onClose}>
+          Done
+        </Button>
+      }
+    >
+      <div className="space-y-6">
+        <p className="typo-body text-[var(--muted-foreground)]">
+          Pick a block to append. It arrives with placeholder content you can edit.
+        </p>
+        {byCategory.map((group) => (
+          <div key={group.id} className="space-y-2">
+            <h4 className="typo-body font-semibold text-[var(--muted-foreground)]">
+              {group.label}
+            </h4>
+            <div className="grid gap-2">
+              {group.types.map((type) => {
+                const meta = SECTION_CATALOG[type];
+                const added = meta.singleton && presentTypes.has(type);
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    disabled={added}
+                    onClick={() => onAdd(type)}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] p-3 text-left transition-colors hover:border-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium">{meta.label}</span>
+                      <span className="block typo-body text-[var(--muted-foreground)]">
+                        {meta.description}
+                      </span>
+                    </span>
+                    {added ? (
+                      <Badge variant="muted">Added</Badge>
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="shrink-0 text-lg leading-none text-[var(--muted-foreground)]"
+                      >
+                        +
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Drawer>
   );
 }
 
 function EditorGroup({
   title,
+  action,
   children,
 }: {
   title: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-      <h3 className="typo-card-title font-semibold">{title}</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="typo-card-title font-semibold">{title}</h3>
+        {action}
+      </div>
       {children}
     </section>
   );

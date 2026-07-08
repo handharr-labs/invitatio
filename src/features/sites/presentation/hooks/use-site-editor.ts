@@ -1,12 +1,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@handharr-labs/forge-ui-base-gold";
-import type {
-  InvitationConfig,
-  InvitationLayout,
-  InvitationTheme,
-  InvitationChrome,
-  SectionConfig,
+import {
+  SECTION_CATALOG,
+  type InvitationConfig,
+  type InvitationLayout,
+  type InvitationTheme,
+  type InvitationChrome,
+  type SectionConfig,
+  type SectionType,
 } from "@handharr-labs/forge-ui-dos";
 import { saveSiteContentAction } from "@/app/(dashboard)/dashboard/actions";
 
@@ -47,6 +49,8 @@ export function useSiteEditor({
   const [sections, setSections] = React.useState<EditorSection[]>(() =>
     initialConfig.sections.map((section, i) => ({ key: `s${i}`, section })),
   );
+  // Monotonic key source for added sections, continuing past the seeded keys.
+  const nextKey = React.useRef(initialConfig.sections.length);
 
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
@@ -70,6 +74,23 @@ export function useSiteEditor({
     setSections((prev) =>
       prev.map((e) => (e.key === key ? { ...e, section: next } : e)),
     );
+  }
+
+  /** Append a section of `type`, seeded with the catalog's starter props. */
+  function addSection(type: SectionType) {
+    const section = {
+      type,
+      props: SECTION_CATALOG[type].defaults(),
+    } as SectionConfig;
+    setSections((prev) => [
+      ...prev,
+      { key: `s${nextKey.current++}`, section },
+    ]);
+  }
+
+  function removeSection(key: string) {
+    setSections((prev) => prev.filter((e) => e.key !== key));
+    setEditingKey((k) => (k === key ? null : k));
   }
 
   async function save() {
@@ -109,6 +130,8 @@ export function useSiteEditor({
     config,
     dirty,
     patchSection,
+    addSection,
+    removeSection,
     save,
     editing,
   };

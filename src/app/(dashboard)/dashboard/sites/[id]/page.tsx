@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageHeader, Badge, Button } from "@handharr-labs/forge-ui-base-gold";
+import { PageHeader } from "@handharr-labs/forge-ui-base-gold";
 import { getSiteByIdUseCase, dbBacked } from "@/features/sites/site.di";
+import { SiteHeaderActionsView } from "@/features/sites/presentation/views/SiteHeaderActionsView";
 import { listRsvpUseCase } from "@/features/rsvp/rsvp.di";
 import { listAllGuestbookEntriesUseCase } from "@/features/guestbook/guestbook.di";
 import { listGuestsUseCase } from "@/features/guests/guest.di";
@@ -73,19 +74,12 @@ export default async function SiteDetailPage({
         title={site.coupleNames}
         description={`/${site.slug}`}
         action={
-          <div className="flex items-center gap-3">
-            <Badge variant={published ? "success" : "muted"}>
-              {published ? "Published" : "Draft"}
-            </Badge>
-            <Link href={`/${site.slug}`} target="_blank">
-              <Button variant="outline" size="sm">
-                View invitation
-              </Button>
-            </Link>
-            <Link href={`/dashboard/sites/${site.id}/edit`}>
-              <Button size="sm">Edit invitation</Button>
-            </Link>
-          </div>
+          <SiteHeaderActionsView
+            siteId={site.id}
+            slug={site.slug}
+            initialPublished={published}
+            canPublish={dbBacked()}
+          />
         }
       />
 
