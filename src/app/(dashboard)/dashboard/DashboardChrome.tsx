@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings } from "lucide-react";
 import {
   DashboardShell,
   Sidebar,
@@ -38,6 +38,16 @@ export function DashboardChrome({
               active:
                 pathname === "/dashboard" ||
                 pathname.startsWith("/dashboard/sites"),
+            },
+          ],
+        },
+        {
+          items: [
+            {
+              label: "Settings",
+              href: "/dashboard/settings/sections",
+              icon: <Settings size={18} />,
+              active: pathname.startsWith("/dashboard/settings"),
             },
           ],
         },

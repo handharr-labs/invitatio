@@ -7,6 +7,7 @@ import {
   DOS_TYPESETS,
   SECTION_CATALOG,
   SECTION_CATEGORIES,
+  type FieldDescriptor,
   type InvitationConfig,
   type InvitationTheme,
   type SectionConfig,
@@ -58,12 +59,17 @@ export function SiteEditorView({
   initialCoupleNames,
   initialConfig,
   canSave,
+  singletonByType,
 }: {
   siteId: string;
   initialSlug: string;
   initialCoupleNames: string;
   initialConfig: InvitationConfig;
   canSave: boolean;
+  /** App-owned cardinality rules — see the section-settings feature. DOS no
+   *  longer carries any cardinality metadata; a type with no rule yet
+   *  defaults to repeatable. */
+  singletonByType: Record<string, boolean>;
 }) {
   const {
     slug,
@@ -345,6 +351,7 @@ export function SiteEditorView({
       {adding && (
         <AddSectionDrawer
           presentTypes={presentTypes}
+          singletonByType={singletonByType}
           onAdd={(type) => addSection(type)}
           onClose={() => setAdding(false)}
         />
@@ -357,10 +364,12 @@ export function SiteEditorView({
  *  invitation are shown as added. Stays open so several can be added at once. */
 function AddSectionDrawer({
   presentTypes,
+  singletonByType,
   onAdd,
   onClose,
 }: {
   presentTypes: Set<SectionType>;
+  singletonByType: Record<string, boolean>;
   onAdd: (type: SectionType) => void;
   onClose: () => void;
 }) {
@@ -395,7 +404,10 @@ function AddSectionDrawer({
             <div className="grid gap-2">
               {group.types.map((type) => {
                 const meta = SECTION_CATALOG[type];
-                const added = meta.singleton && presentTypes.has(type);
+                // Repeatable by default for a type with no rule yet — DOS no
+                // longer carries a cardinality opinion, this is app-owned.
+                const singleton = singletonByType[type] ?? false;
+                const added = singleton && presentTypes.has(type);
                 return (
                   <button
                     key={type}
@@ -473,7 +485,8 @@ function ToggleRow({
  * `fields` schema, render a typed form (`SectionForm`); otherwise fall back to
  * the raw-JSON editor (the migration escape hatch). Schema-backed sections also
  * keep an "Edit as JSON" toggle for power users — the two stay in sync when you
- * flip. `heading` (the section-shell shell) is edited as JSON in both modes.
+ * flip. `heading` (the section-shell eyebrow/title) is always typed inputs —
+ * its shape is fixed by DOS (`SectionHeading`), not organism-specific.
  */
 function SectionContentDrawer({
   title,
@@ -496,8 +509,9 @@ function SectionContentDrawer({
   const [text, setText] = React.useState(() =>
     JSON.stringify(section.props, null, 2),
   );
-  const [heading, setHeading] = React.useState(() =>
-    section.heading ? JSON.stringify(section.heading, null, 2) : "",
+  const [eyebrow, setEyebrow] = React.useState(section.heading?.eyebrow ?? "");
+  const [headingTitle, setHeadingTitle] = React.useState(
+    section.heading?.title ?? "",
   );
   const [error, setError] = React.useState<string | null>(null);
 
@@ -529,13 +543,15 @@ function SectionContentDrawer({
       }
     }
     const next = { ...section, props: nextProps } as SectionConfig;
-    if (heading.trim()) {
-      try {
-        next.heading = JSON.parse(heading);
-      } catch {
-        setError("The section header isn't valid JSON.");
-        return;
-      }
+    // Keep any non-form heading keys (tone, divider) untouched; eyebrow/title
+    // come from the inputs, dropped entirely when cleared rather than left stale.
+    const nextHeading: Record<string, unknown> = { ...section.heading };
+    delete nextHeading.eyebrow;
+    delete nextHeading.title;
+    if (eyebrow.trim()) nextHeading.eyebrow = eyebrow.trim();
+    if (headingTitle.trim()) nextHeading.title = headingTitle.trim();
+    if (Object.keys(nextHeading).length > 0) {
+      next.heading = nextHeading as SectionConfig["heading"];
     } else {
       delete next.heading;
     }
@@ -593,15 +609,25 @@ function SectionContentDrawer({
           />
         )}
 
-        <Field label="Section header (optional)">
-          <Textarea
-            value={heading}
-            onChange={(e) => setHeading(e.target.value)}
-            rows={3}
-            className="font-mono text-xs"
-            placeholder={'{ "eyebrow": "…", "title": "…" }'}
-          />
-        </Field>
+        <div className="space-y-3">
+          <h4 className="typo-body font-semibold text-[var(--muted-foreground)]">
+            Section header (optional)
+          </h4>
+          <Field label="Eyebrow">
+            <Input
+              value={eyebrow}
+              onChange={(e) => setEyebrow(e.target.value)}
+              placeholder="Meet the Bride & Groom"
+            />
+          </Field>
+          <Field label="Title">
+            <Input
+              value={headingTitle}
+              onChange={(e) => setHeadingTitle(e.target.value)}
+              placeholder="Mempelai"
+            />
+          </Field>
+        </div>
         {invalid && (
           <p className="text-sm text-[var(--muted-foreground)]">
             Fill the required fields to apply.
