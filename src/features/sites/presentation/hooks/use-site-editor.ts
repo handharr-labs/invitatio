@@ -61,14 +61,30 @@ export function useSiteEditor({
     [layout, theme, chrome, sections],
   );
 
-  const dirty = React.useMemo(() => {
-    const original = JSON.stringify({
-      slug: initialSlug,
-      coupleNames: initialCoupleNames,
-      config: initialConfig,
-    });
-    return JSON.stringify({ slug, coupleNames, config }) !== original;
-  }, [slug, coupleNames, config, initialSlug, initialCoupleNames, initialConfig]);
+  // Baseline for the dirty check: the *normalized* initial state, built exactly
+  // like `config` above (same default fills, same key order). Comparing against
+  // raw `initialConfig` would false-positive on first open — the derived config
+  // fills layout/theme/chrome defaults and fixes key order, so the serialized
+  // strings never matched even before an edit.
+  const baseline = React.useMemo(
+    () =>
+      JSON.stringify({
+        slug: initialSlug,
+        coupleNames: initialCoupleNames,
+        config: {
+          layout: initialConfig.layout ?? { type: "single" },
+          theme: initialConfig.theme ?? {},
+          chrome: initialConfig.chrome ?? {},
+          sections: initialConfig.sections,
+        } satisfies InvitationConfig,
+      }),
+    [initialSlug, initialCoupleNames, initialConfig],
+  );
+
+  const dirty = React.useMemo(
+    () => JSON.stringify({ slug, coupleNames, config }) !== baseline,
+    [slug, coupleNames, config, baseline],
+  );
 
   function patchSection(key: string, next: SectionConfig) {
     setSections((prev) =>

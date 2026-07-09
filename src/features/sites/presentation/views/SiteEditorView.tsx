@@ -35,6 +35,7 @@ import {
   useSiteEditor,
   type EditorSection,
 } from "../hooks/use-site-editor";
+import { SectionForm, isSectionFormValid } from "./SectionForm";
 
 /** Representative swatch colors per palette (preview only). */
 const PALETTE_COLORS: Record<string, string> = {
@@ -211,6 +212,9 @@ export function SiteEditorView({
             checked={Boolean(chrome.nav)}
             onChange={(v) => setChrome((c) => ({ ...c, nav: v }))}
           />
+          {/* Bilingual: enabling this shows the ID/EN switcher on the invitation
+              AND reveals per-language (ID/EN) inputs for translatable fields in
+              the section editor. DOS resolves the active language at render. */}
           <ToggleRow
             label="Language toggle (ID/EN)"
             checked={Boolean(chrome.language)}
@@ -329,6 +333,7 @@ export function SiteEditorView({
           key={editing.key}
           title={label(editing.section.type)}
           section={editing.section}
+          bilingual={Boolean(chrome.language)}
           onApply={(next) => {
             patchSection(editing.key, next);
             setEditingKey(null);
@@ -463,18 +468,31 @@ function ToggleRow({
   );
 }
 
-/** Per-section content editor — a JSON editor for the section's props. */
+/**
+ * Per-section content editor. When the DS catalog gives this section type a
+ * `fields` schema, render a typed form (`SectionForm`); otherwise fall back to
+ * the raw-JSON editor (the migration escape hatch). Schema-backed sections also
+ * keep an "Edit as JSON" toggle for power users — the two stay in sync when you
+ * flip. `heading` (the section-shell shell) is edited as JSON in both modes.
+ */
 function SectionContentDrawer({
   title,
   section,
+  bilingual,
   onApply,
   onClose,
 }: {
   title: string;
   section: SectionConfig;
+  bilingual: boolean;
   onApply: (next: SectionConfig) => void;
   onClose: () => void;
 }) {
+  const fields = SECTION_CATALOG[section.type].fields;
+  const [props, setProps] = React.useState<Record<string, unknown>>(
+    () => ({ ...(section.props as Record<string, unknown>) }),
+  );
+  const [jsonMode, setJsonMode] = React.useState(!fields);
   const [text, setText] = React.useState(() =>
     JSON.stringify(section.props, null, 2),
   );
@@ -483,22 +501,45 @@ function SectionContentDrawer({
   );
   const [error, setError] = React.useState<string | null>(null);
 
-  function apply() {
+  const invalid = Boolean(fields) && !jsonMode && !isSectionFormValid(fields!, props);
+
+  // Sync the two editors on toggle so neither loses edits made in the other.
+  function toForm() {
     try {
-      const props = JSON.parse(text);
-      const next: SectionConfig = {
-        ...section,
-        props,
-      } as SectionConfig;
-      if (heading.trim()) {
-        next.heading = JSON.parse(heading);
-      } else {
-        delete next.heading;
-      }
-      onApply(next);
+      setProps(JSON.parse(text));
+      setError(null);
+      setJsonMode(false);
     } catch {
-      setError("Invalid JSON — check for a stray comma or quote.");
+      setError("Fix the JSON before switching back to the form.");
     }
+  }
+  function toJson() {
+    setText(JSON.stringify(props, null, 2));
+    setJsonMode(true);
+  }
+
+  function apply() {
+    let nextProps: unknown = props;
+    if (jsonMode) {
+      try {
+        nextProps = JSON.parse(text);
+      } catch {
+        setError("Invalid JSON — check for a stray comma or quote.");
+        return;
+      }
+    }
+    const next = { ...section, props: nextProps } as SectionConfig;
+    if (heading.trim()) {
+      try {
+        next.heading = JSON.parse(heading);
+      } catch {
+        setError("The section header isn't valid JSON.");
+        return;
+      }
+    } else {
+      delete next.heading;
+    }
+    onApply(next);
   }
 
   return (
@@ -511,32 +552,61 @@ function SectionContentDrawer({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={apply}>Apply</Button>
+          <Button onClick={apply} disabled={invalid}>
+            Apply
+          </Button>
         </>
       }
     >
       <div className="space-y-4">
-        <p className="typo-body text-[var(--muted-foreground)]">
-          Edit this section&rsquo;s content. Fields map to the invitation
-          component&rsquo;s props.
-        </p>
-        <Field label="Content (props)">
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={16}
-            className="font-mono text-xs"
+        <div className="flex items-start justify-between gap-3">
+          <p className="typo-body text-[var(--muted-foreground)]">
+            Edit this section&rsquo;s content.
+          </p>
+          {fields && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={jsonMode ? toForm : toJson}
+            >
+              {jsonMode ? "Edit as form" : "Edit as JSON"}
+            </Button>
+          )}
+        </div>
+
+        {jsonMode ? (
+          <Field label="Content (props)">
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={16}
+              className="font-mono text-xs"
+            />
+          </Field>
+        ) : (
+          <SectionForm
+            fields={fields!}
+            value={props}
+            onChange={setProps}
+            bilingual={bilingual}
           />
-        </Field>
-        <Field label="Heading (optional)">
+        )}
+
+        <Field label="Section header (optional)">
           <Textarea
             value={heading}
             onChange={(e) => setHeading(e.target.value)}
-            rows={4}
+            rows={3}
             className="font-mono text-xs"
             placeholder={'{ "eyebrow": "…", "title": "…" }'}
           />
         </Field>
+        {invalid && (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Fill the required fields to apply.
+          </p>
+        )}
         {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
       </div>
     </Drawer>
