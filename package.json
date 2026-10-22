@@ -2,6 +2,9 @@
   "name": "invitatio",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "description": "Admin-scaffolded, per-couple published wedding invitation sites. Data + admin + routing layer on top of the @handharr-labs Forge Kit.",
   "scripts": {
     "dev": "next dev",
